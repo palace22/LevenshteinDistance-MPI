@@ -21,8 +21,11 @@ protected:
   void send();
   void receive();
   int calculate_distance();
+  void instantiate_matrix();
 
   MPI_Status status;
+  MPI_Request col_request;
+  MPI_Request row_request;
 
   int rank, size, tile, tile_A, tile_B, process_y;
   char *worker_string_A, *worker_string_B;
@@ -32,6 +35,5 @@ protected:
   {
     bool row = true;
     bool col = true;
-    bool single = true;
   } send_flag, receive_flag;
 };
