@@ -26,8 +26,8 @@ int main(int argc, char **argv)
     int size_string_B = 9790 + 1;
     int TILE_STRING = 5000 + 1; // char[] + '/0'
 
-    int process_y = ceil(float(size_string_A - 1) / float(TILE_STRING - 1));
-    int process_x = ceil(float(size_string_B - 1) / float(TILE_STRING - 1));
+    int process_x = ceil(float(size_string_A - 1) / float(TILE_STRING - 1));
+    int process_y = ceil(float(size_string_B - 1) / float(TILE_STRING - 1));
 
     MPI_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
@@ -35,14 +35,14 @@ int main(int argc, char **argv)
     MPI_Status stat;
 
     int row_rank, row_size; //divide rank by rows to send it string_a
-    int row_comm_rule = rank % process_x;
+    int row_comm_rule = rank % process_y;
     MPI_Comm row_comm;
     MPI_Comm_split(MPI_COMM_WORLD, row_comm_rule, rank, &row_comm);
     MPI_Comm_rank(row_comm, &row_rank);
     MPI_Comm_size(row_comm, &row_size);
 
     int col_rank, col_size; //divide rank by cols to send it string_B
-    int col_comm_rule = rank / process_x;
+    int col_comm_rule = rank / process_y;
     MPI_Comm col_comm;
     MPI_Comm_split(MPI_COMM_WORLD, col_comm_rule, rank, &col_comm);
     MPI_Comm_rank(col_comm, &col_rank);

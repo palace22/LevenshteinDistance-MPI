@@ -96,7 +96,7 @@ void Worker::send()
     }
     if (send_flag.col)
     {
-        MPI_Send(&worker_matrix[(tile_B - 1)], 1, SUB_VECTOR_COL, rank + 1, COL_TAG, MPI_COMM_WORLD);
+    if (send_flag.row){
         MPI_Isend(&worker_matrix[tile_B * (tile_A-1)], 1, SUB_VECTOR_ROW, rank + process_y, ROW_TAG, MPI_COMM_WORLD, &row_request);
     }
     if (send_flag.single)
