@@ -18,11 +18,6 @@ Worker::Worker(int r, int s, int t, char *&w_str_A, char *&w_str_B, int s_str_A,
     //set send flag
     if (rank % process_y == process_y - 1)
     {
-        /*
-        oooox
-        oooox
-        oooox
-        */
         send_flag.col = false;
         send_flag.single = false;
         tile_B = (s_str_B % (tile - 1) == 0 ? tile : (s_str_B % (tile - 1)) + 1);
@@ -32,11 +27,6 @@ Worker::Worker(int r, int s, int t, char *&w_str_A, char *&w_str_B, int s_str_A,
     }
     if (rank >= size - process_y)
     {
-        /*
-        ooooo
-        ooooo
-        xxxxx
-        */
         send_flag.row = false;
         send_flag.single = false;
         tile_A = (s_str_A % (tile - 1) == 0 ? tile : (s_str_A % (tile - 1)) + 1);
@@ -48,11 +38,6 @@ Worker::Worker(int r, int s, int t, char *&w_str_A, char *&w_str_B, int s_str_A,
     //set receive flag
     if (rank % process_y == 0)
     {
-        /*
-        xoooo
-        xoooo
-        xoooo
-        */
         receive_flag.col = false;
         receive_flag.single = false;
 
@@ -61,19 +46,12 @@ Worker::Worker(int r, int s, int t, char *&w_str_A, char *&w_str_B, int s_str_A,
     }
     if (rank < process_y)
     {
-        /*
-        xxxxx
-        ooooo
-        ooooo
-        */
+        receive_flag.col = false;
         receive_flag.row = false;
         receive_flag.single = false;
         for (int i = 0; i < tile_B; i++)
             worker_matrix[i] = i - 1 + rank * tile;
-        //cout << "RANK: " << rank << " OF SIZE " << size<< " Setted 4 "  << " WITH PR Y " << process_y<< endl;
     }
-    // tile_A = tile_A - 1; //cause final symbol '\0' is setted
-    // tile_B = tile_B - 1; //cause final symbol '\0' is setted
 
     if (rank == 0)
     {
@@ -95,17 +73,17 @@ void Worker::receive()
     if (receive_flag.row)
     {
         MPI_Recv(&worker_matrix[0], 1, SUB_VECTOR_ROW, rank - process_y, ROW_TAG, MPI_COMM_WORLD, &status);
-        //cout << "RANK: " << rank << " RECEIVED ROW BY: " << status.MPI_SOURCE << endl;
+        worker_matrix = new int[tile_A * tile_B]; // here +1 is for col and row received
     }
     if (receive_flag.col)
     {
         MPI_Recv(&worker_matrix[0], 1, SUB_VECTOR_COL, rank - 1, COL_TAG, MPI_COMM_WORLD, &status);
-        //cout << "RANK: " << rank << " RECEIVED COL BY: " << status.MPI_SOURCE << endl;
+        for (int j = 0; j < tile_A; j++)
     }
     if (receive_flag.single)
     {
         MPI_Recv(&worker_matrix[0], 1, MPI_INT, rank - process_y - 1, SINGLE_TAG, MPI_COMM_WORLD, &status);
-        //cout << "RANK: " << rank << " RECEIVED COL BY: " << status.MPI_SOURCE << endl;
+        for (int i = 0; i < tile_B; i++)
     }
 }
 
@@ -114,17 +92,17 @@ void Worker::send()
     if (send_flag.row)
     {
         MPI_Send(&worker_matrix[(tile_B - 1) * tile_A], 1, SUB_VECTOR_ROW, rank + process_y, ROW_TAG, MPI_COMM_WORLD);
-        //cout << "RANK: " << rank << " SEND ROW TO: " <<rank + process_y << endl;
+    instantiate_matrix();
     }
     if (send_flag.col)
     {
         MPI_Send(&worker_matrix[(tile_B - 1)], 1, SUB_VECTOR_COL, rank + 1, COL_TAG, MPI_COMM_WORLD);
-        //cout << "RANK: " << rank << " SEND COL TO: " <<rank + 1 << endl;
+        MPI_Isend(&worker_matrix[tile_B * (tile_A-1)], 1, SUB_VECTOR_ROW, rank + process_y, ROW_TAG, MPI_COMM_WORLD, &row_request);
     }
     if (send_flag.single)
     {
         MPI_Send(&worker_matrix[tile_A * tile_B - 1], 1, MPI_INT, rank + process_y + 1, SINGLE_TAG, MPI_COMM_WORLD);
-        //cout << "RANK: " << rank << " SEND SINGLE TO: " <<rank + process_y +1 << endl;
+        MPI_Request_free(&col_request);
     }
 
     delete[] worker_string_A;
@@ -146,8 +124,6 @@ int minimum_(const int a, const int b, const int c)
 
 int Worker::calculate_distance()
 {
-    //std::cout << "RANK: " << rank << " STR L A: " << (worker_string_A) << " STR L B: " << (worker_string_B) << std::endl;
-    //std::cout << "RANK: " << rank << " STR L A: " << tile_B << " STR L B: " << tile_B << std::endl;
     int distance;
 
     for (int i = 1; i < tile_B; i++)
